@@ -45,11 +45,7 @@ jobs:
           cd fs_filepicker &&
           git checkout $BRANCH_NAME &&
           source /opt/conda/bin/activate fsfp-${{ inputs.branch_name }}-env &&
-          pytest tests \
-          || (for i in {1..5} \
-            ; do pytest --last-failed --lfnf=none \
-            && break \
-          ; done)"
+          pytest tests" 
           
       - name: Log into dockerhub
         run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_ACCOUNT }} --password-stdin
