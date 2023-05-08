@@ -1,0 +1,14 @@
+name: Update Image testing-develop
+
+on: 
+  workflow_dispatch:
+
+jobs:     
+  test-and-publish-testing-develop:
+    uses: 
+      ./.github/workflows/docker-publish.yml
+    with:
+      branch_name: develop
+    secrets: inherit
+
+

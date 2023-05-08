@@ -1,0 +1,58 @@
+name: Update Image
+
+on: 
+  workflow_call:
+    inputs:
+      branch_name:
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_ACCOUNT:
+        required: true
+      DOCKERHUB_PASSWORD:
+        required: true
+
+env:
+  IMAGE_PATH: openmss
+  BRANCH_NAME: ${{ inputs.branch_name }}
+  IMAGE_NAME: fsfp-testing-${{ inputs.branch_name }}
+  
+jobs:     
+  test-and-publish-testing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build image
+        run: |
+          set -x
+          docker build . --build-arg BRANCH=$BRANCH_NAME --tag $IMAGE_PATH/$IMAGE_NAME:latest
+        
+      - name: Print conda list
+        run: |
+          docker run $IMAGE_PATH/$IMAGE_NAME:latest /bin/bash -c "
+          source /opt/conda/bin/activate fsfp-${{ inputs.branch_name }}-env &&
+          conda list
+          "
+        
+      - name: Test image
+        timeout-minutes: 30
+        run: |
+          set -x
+          docker run $IMAGE_PATH/$IMAGE_NAME:latest /bin/bash -c "
+          git clone https://github.com/Open-MSS/fs_filepicker.git &&
+          cd fs_filepicker &&
+          git checkout $BRANCH_NAME &&
+          source /opt/conda/bin/activate fsfp-${{ inputs.branch_name }}-env &&
+          pytest -k  \
+          || (for i in {1..5} \
+            ; do pytest --last-failed --lfnf=none \
+            && break \
+          ; done)"
+          
+      - name: Log into dockerhub
+        run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_ACCOUNT }} --password-stdin
+
+      - name: Push image
+        run: docker push $IMAGE_PATH/$IMAGE_NAME:latest

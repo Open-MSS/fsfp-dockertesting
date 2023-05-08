@@ -1,0 +1,13 @@
+name: Update Image testing-stable
+
+on: 
+  workflow_dispatch:
+
+jobs:     
+  test-and-publish-testing-stable:
+    uses: 
+      ./.github/workflows/docker-publish.yml
+    with:
+      branch_name: stable
+    secrets: inherit
+
