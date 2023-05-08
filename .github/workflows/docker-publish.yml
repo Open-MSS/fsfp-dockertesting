@@ -45,7 +45,7 @@ jobs:
           cd fs_filepicker &&
           git checkout $BRANCH_NAME &&
           source /opt/conda/bin/activate fsfp-${{ inputs.branch_name }}-env &&
-          pytest -k  \
+          pytest  \
           || (for i in {1..5} \
             ; do pytest --last-failed --lfnf=none \
             && break \
